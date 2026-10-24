@@ -1,0 +1,38 @@
+diff --git a/libavcodec/mediacodecdec.c b/libavcodec/mediacodecdec.c
+index bc176d8..d9e18c2 100644
+--- a/libavcodec/mediacodecdec.c
++++ b/libavcodec/mediacodecdec.c
+@@ -28,5 +28,6 @@
+ #include "libavutil/avassert.h"
+ #include "libavutil/common.h"
++#include "libavutil/dovi_meta.h"
+ #include "libavutil/mem.h"
+ #include "libavutil/opt.h"
+ #include "libavutil/intreadwrite.h"
+@@ -348,6 +349,14 @@ static av_cold int mediacodec_decode_init(AVCodecContext *avctx)
+     case AV_CODEC_ID_HEVC:
+         codec_mime = "video/hevc";
+-
++
++        {
++            const AVPacketSideData *sd = ff_get_coded_side_data(avctx, AV_PKT_DATA_DOVI_CONF);
++
++            if (sd && sd->size >= sizeof(AVDOVIDecoderConfigurationRecord) &&
++                ((const AVDOVIDecoderConfigurationRecord *)sd->data)->dv_profile == 5)
++                codec_mime = "video/dolby-vision";
++        }
++
+         ret = hevc_set_extradata(avctx, format);
+         if (ret < 0)
+             goto done;
+diff --git a/libavcodec/mediacodecdec_common.c b/libavcodec/mediacodecdec_common.c
+index 9a627c0..0a518fd 100644
+--- a/libavcodec/mediacodecdec_common.c
++++ b/libavcodec/mediacodecdec_common.c
+@@ -775,4 +775,5 @@ static int mediacodec_dec_get_video_codec(AVCodecContext *avctx, MediaCodecDecCo
+-    profile = ff_AMediaCodecProfile_getProfileFromAVCodecContext(avctx);
++    profile = !strcmp(mime, "video/dolby-vision") ? -1 :
++              ff_AMediaCodecProfile_getProfileFromAVCodecContext(avctx);
+     if (profile < 0) {
+         av_log(avctx, AV_LOG_WARNING, "Unsupported or unknown profile\n");
+     }

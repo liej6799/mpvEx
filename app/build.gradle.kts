@@ -211,7 +211,7 @@ dependencies {
   implementation(libs.truetype.parser)
   implementation(libs.fsaf)
   implementation(libs.mediainfo.lib)
-  implementation(libs.mpv.android)
+  implementation(files("libs/mpv-android-1.0.0-dolby-vision.aar"))
 
   // Network protocol libraries
   implementation(libs.smbj)
